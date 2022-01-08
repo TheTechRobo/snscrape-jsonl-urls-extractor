@@ -1,13 +1,15 @@
-import json
+import json, sys
 
-with open(input("Enter Json File:")) as f:
+print("Enter Json File:", file=sys.stderr)
+
+with open(input()) as f:
     r = f.readlines()
 
 for i in r:
     try:
         jj = json.loads(i)
     except Exception as ename:
-        print(f"invalid JSON, skipping ({ename})")
+        print(f"invalid JSON, skipping ({ename})", file=sys.stderr)
         continue
     for ids in jj['outlinks']:
         print(ids)

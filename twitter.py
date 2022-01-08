@@ -8,7 +8,7 @@ for i in r:
     try:
         jj = json.loads(i)
     except Exception as ename:
-        print(f"invalid JSON, skipping ({ename})")
+        print(f"invalid JSON, skipping ({ename})", file=sys.stderr)
         continue
     for key in ["url"]:
         if jj.get(key) is None:
