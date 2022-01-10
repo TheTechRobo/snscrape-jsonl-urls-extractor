@@ -15,3 +15,5 @@ for i in r:
         print(ids)
     print(jj['url'])
     print(jj['image']) if not (jj.get("image") is None) else print("", end="")
+    if not jj.get("linkPreview") is None:
+        print(jj['linkPreview']['image'])
