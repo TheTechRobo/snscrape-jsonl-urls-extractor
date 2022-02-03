@@ -2,3 +2,8 @@ home-thetechrobo-*/
 url*
 Hongkong
 gs-*
+
+
+# Added by cargo
+
+/target
