@@ -12,8 +12,7 @@ until then, deal with it.
 
 Switching to Rust
 -----------------
-Will happen when I have access to my desktop again, because F A S T
-
+There's a TWITTER version of the Rust version, but no telegram version. However I recommend using the rust version for the twitter jsonl if you can, because it's a lot faster.
 Dupes
 -----
 This program seems to produce a LOT of duplicates. Use the `sort` command with the `-u` param to fix this; however this will disrupt the order of URLs.
