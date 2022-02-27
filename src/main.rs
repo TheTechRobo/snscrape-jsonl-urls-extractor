@@ -14,6 +14,32 @@ fn parse_as_jsonl(data: String) -> Vec<JsonValue> {
 }
 fn parse_telegram(data: String) {
     let datas = parse_as_jsonl(data);
+    for entry in datas {
+        let links = match entry["outlinks"].clone() {
+            JsonValue::Array(a) => a,
+            _ => vec!(),
+        };
+        for link in links {
+            println!("{}", match link {
+                JsonValue::String(s) => s,
+                _ => unreachable!("This is not Telegram JSONL.")
+            });
+        }
+        println!("{}", match entry["url"].clone() {
+            JsonValue::String(s) => s,
+            _ => unreachable!("This is not Telegram JSONL.")});
+        match entry.contains_key("image") {
+            true => match entry["image"] {
+                JsonValue::String(s) => println!("{}", s),
+                _ => (),
+            },
+            false => ()
+        };
+        match entry["linkPreview"]["image"].clone() {
+            JsonValue::String(s) => println!("{}", s),
+            _ => (),
+        };
+    }
 }
 fn parse_twitter(data: String) {
     let datas = parse_as_jsonl(data);
