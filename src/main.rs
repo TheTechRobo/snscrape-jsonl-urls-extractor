@@ -1,10 +1,8 @@
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use tinyjson::JsonValue;
 
-fn parse_as_json(data: String) -> JsonValue {
-    data.parse().expect("Bad JSON")
-}
 fn parse_as_jsonl(data: String) -> Vec<JsonValue> {
     let mut datas = Vec::new();
     for line in data.lines() {
@@ -28,17 +26,25 @@ fn parse_telegram(data: String) {
         println!("{}", match entry["url"].clone() {
             JsonValue::String(s) => s,
             _ => unreachable!("This is not Telegram JSONL.")});
-        match entry.contains_key("image") {
-            true => match entry["image"] {
-                JsonValue::String(s) => println!("{}", s),
-                _ => (),
+        let maybe_object = entry.get::<HashMap<_, _>>();
+        match maybe_object.unwrap().contains_key("image") {
+            true => {
+                if entry["image"].is_null() {
+                    ()
+                }
+                match entry["image"].clone() {
+                    JsonValue::String(s) => println!("{}", s),
+                    _ => (),
+                }
             },
             false => ()
         };
-        match entry["linkPreview"]["image"].clone() {
-            JsonValue::String(s) => println!("{}", s),
-            _ => (),
-        };
+        if !(entry["linkPreview"].is_null() || entry["linkPreview"]["image"].is_null()) {
+            match entry["linkPreview"]["image"].clone() {
+                JsonValue::String(s) => println!("{}", s),
+                _ => (),
+            };
+        }
     }
 }
 fn parse_twitter(data: String) {
@@ -57,10 +63,10 @@ fn parse_twitter(data: String) {
         for filee in media {
             let file = match filee {
                 JsonValue::Object(o) => o,
-                JsonValue::String(s) => continue,
+                JsonValue::String(_) => continue,
                 _ => unreachable!("This is not Twitter JSONL.")
             };
-            let mut fullUrls: Vec<String> = Vec::new();
+            let mut full_urls: Vec<String> = Vec::new();
             let mut url = "".to_string();
             if file.contains_key("fullUrl") {
                 url = match file["fullUrl"].clone() {
@@ -69,7 +75,7 @@ fn parse_twitter(data: String) {
                     _ => unreachable!("Invalid twitter jsonl"),
                 };
             }
-            if url == "" {
+            if url.is_empty() {
                 let variants = match file["variants"].clone() {
                     JsonValue::Array(a) => a,
                     _ => unreachable!("This {:?} is not twitter jsonl", file["variants"].clone()),
@@ -83,14 +89,14 @@ fn parse_twitter(data: String) {
                         JsonValue::String(s) => s,
                         _ => unreachable!("Invalid twitter jsonl.."),
                     };
-                    fullUrls.push(video_url);
+                    full_urls.push(video_url);
                 }
             }
             else {
-                fullUrls.push(url)
+                full_urls.push(url)
             }
-            for Url in fullUrls {
-                println!("{}", Url);
+            for outlink_full_url in full_urls {
+                println!("{}", outlink_full_url);
             }
         }
     }
