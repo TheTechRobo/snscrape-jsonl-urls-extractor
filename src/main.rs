@@ -1,17 +1,30 @@
 use std::collections::HashMap;
 use std::env;
-use std::fs;
 use tinyjson::JsonValue;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader};
 
-fn parse_as_jsonl(data: String) -> Vec<JsonValue> {
-    let mut datas = Vec::new();
-    for line in data.lines() {
-        datas.push(line.parse().unwrap());
-    }
-    datas
+struct IteratorJsonl {
+    buffer: io::Lines<BufReader<File>>,
 }
-fn parse_telegram(data: String) {
-    let datas = parse_as_jsonl(data);
+
+impl Iterator for IteratorJsonl {
+    type Item = JsonValue;
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(self.buffer.next().unwrap().unwrap().parse().unwrap())
+    }
+}
+impl IteratorJsonl {
+    fn new(filename: String) -> IteratorJsonl {
+        let file = File::open(filename).unwrap();
+        IteratorJsonl { buffer: io::BufReader::new(file).lines() }
+    }
+}
+fn parse_as_jsonl(filename: String) -> IteratorJsonl {
+    IteratorJsonl::new(filename)
+}
+fn parse_telegram(filename: String) {
+    let datas = parse_as_jsonl(filename);
     for entry in datas {
         let links = match entry["outlinks"].clone() {
             JsonValue::Array(a) => a,
@@ -95,8 +108,27 @@ fn parse_twitter(data: String) {
             else {
                 full_urls.push(url)
             }
-            for outlink_full_url in full_urls {
-                println!("{}", outlink_full_url);
+            if !entry["card"].is_null() && !entry["card"]["thumbnailUrl"].is_null() {
+                println!("{}", entry["card"]["thumbnailUrl"].get::<String>().unwrap());
+            }
+            if !entry["outlinks"].is_null() {
+                let entryoutlinks = match entry["outlinks"].clone() {
+                    JsonValue::Array(a) => a,
+                    _ => unreachable!("This is not Twitter JSONL"),
+                };
+                let entrytcooutlinks = match entry["tcooutlinks"].clone() {
+                    JsonValue::Array(a) => a,
+                    _ => unreachable!("This is not Twitter JSONL"),
+                };
+                for outlink in entrytcooutlinks {
+                    full_urls.push(outlink.get::<String>().unwrap().to_string());
+                }
+                for tcooutlink in entryoutlinks {
+                    full_urls.push(tcooutlink.get::<String>().unwrap().to_string());
+                }
+            }
+            for media_and_outlink_full_url in full_urls {
+                println!("{}", media_and_outlink_full_url);
             }
         }
     }
@@ -119,13 +151,13 @@ fn main() {
         panic!("{}", pan);
     }
     eprintln!("Using {} scraper on file {}.", args[1], args[2]);
-    let contents = fs::read_to_string(&args[2])
-        .expect("Something went wrong reading the file");
+    //let contents = fs::read_to_string(&args[2])
+    //    .expect("Something went wrong reading the file");
     if args[1] == "telegram" {
-        parse_telegram(contents);
+        parse_telegram(args[2].clone());
     }
     else if args[1] == "twitter" {
-        parse_twitter(contents);
+        parse_twitter(args[2].clone());
     }
     else {
         panic!("That's not a valid scraper. Try {} help", args[0]);
