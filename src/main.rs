@@ -11,7 +11,11 @@ struct IteratorJsonl {
 impl Iterator for IteratorJsonl {
     type Item = JsonValue;
     fn next(&mut self) -> Option<Self::Item> {
-        Some(self.buffer.next().unwrap().unwrap().parse().unwrap())
+        let ret = self.buffer.next();
+        match ret {
+            Some(r) => Some(r.expect("Failed to read").parse::<JsonValue>().expect("Bad JSONL")),
+            None => None,
+        }
     }
 }
 impl IteratorJsonl {
